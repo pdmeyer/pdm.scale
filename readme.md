@@ -10,17 +10,24 @@ This package currently includes four gen patches:
 - `pdm.scale.validate.gendsp` : validate that a scale is formatted correctly for use in the library
 - `pdm.scale.length.gendesp` : get the length of a scale
 
-The gen patches are useful for processing events or signals in Max, MSP, gen~, or RNBO.
+The gen patches are useful for processing events or signals in Max, MSP, gen~, or RNBO. You can use the component with either the signal-processing `gen~` or event `gen` objects in Max.
+
+```
+[gen pdm.scale.fit] // fit a note to a scale (event version)
+[gen~ pdm.scale.fit] // fit a note to a scale (signal version)
+```
 
 Scales are provided to the objects as a buffer containing an ascending list of semitone intervals.
 
-e.g. a Major scale would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]`. You can use the buffer name "intervals", or provide your own buffer and assign it to the "intervals" parameter of the gen/gen~ patcher. e.g. `[gen pdm.scale.fit @intervals ---my_intervals_buf]`
+For example, a Major scale would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]`. You can use the buffer name "intervals", or provide your own buffer and assign it to the "intervals" parameter of the gen/gen~ patcher:
 
-The root note of the scale is provided as a parameter to the objects.
+```
+[gen pdm.scale.fit @intervals ---my_intervals_buf]
+```
 
-e.g. a Major scale with a root note of 0 would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]` and a `root_note` of 0.
+The root note of the scale is set using the `root_note` attribute of the gen patch.
 
-Use `pdm.scale.maxhelp` to see how to use the library. 
+Use `pdm.scale.maxhelp` to see how to use the gen components.
 
 ## Javascript
 The repository also includes a Javascript class and examples for working with scales in Javascript.
