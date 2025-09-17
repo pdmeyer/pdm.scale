@@ -1,0 +1,52 @@
+{
+	"name" : "pdm.scale",
+	"displayname" : "",
+	"version" : "0.1.0",
+	"author" : "Philip Meyer",
+	"authors" : [  ],
+	"description" : "Abstractions for working with 12-tet scales in Max and gen",
+	"tags" : [ "scales" ],
+	"website" : "",
+	"extends" : "",
+	"extensible" : 0,
+	"max_version_min" : "9.0.8",
+	"max_version_max" : "none",
+	"os" : 	{
+		"macintosh" : 		{
+			"min_version" : "10.13.0",
+			"platform" : [ "x64" ]
+		},
+		"windows" : 		{
+			"min_version" : "10.0.0",
+			"platform" : [ "x64" ]
+		}
+
+	},
+	"homepatcher" : "",
+	"filelist" : 	{
+		"extras" : [
+
+		],
+		"patchers" : [ 
+
+		],
+		"help" : [ 
+			"pdm.scale.maxhelp"
+		],
+		"docs" : [ 
+
+		],
+		"javascript" : [ 
+
+		],
+		"code" : [ 
+			"pdm.scale.genexpr",
+			"pdmq.scale.fit.gendsp",
+			"pdmq.scale.xpose.gendsp",
+			"pdmq.scale.validate.gendsp"
+		],
+		"examples" : [
+
+		]
+	}
+}

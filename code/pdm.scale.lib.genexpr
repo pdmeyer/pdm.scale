@@ -1,0 +1,163 @@
+// Validates that a scale intervals buffer is properly ordered
+// Parameters:
+//   buffer: Buffer containing scale intervals in semitones from root
+// Returns: 1 if intervals are in ascending order, 0 if not
+validate_intervals(buffer) {
+    // Check each interval to ensure it's greater than or equal to the previous one
+    status = 1;
+    for(i = 1; i < dim(buffer); i+=1) {
+        diff = peek(buffer, i) - peek(buffer, i-1);
+
+        if(diff < 0) {
+            status = 0;
+            break;
+        }
+    }
+    return status;
+    
+}
+
+// Returns the length of a scale in semitones
+// Parameters:
+//   intervals_buf: Buffer containing scale intervals in semitones from root
+// Returns: Length of the scale in degrees
+scale_length(intervals_buf) {
+    if(validate_intervals(intervals_buf) == 0) {
+        return -1;
+    }
+
+    // if the first interval is not 0, add 1 to the length
+    offset = peek(intervals_buf, 0) != 0;
+
+    // return the length of the scale in degrees
+    return dim(intervals_buf) + offset;
+}
+
+// Fits an input MIDI note to the nearest note in a specified scale
+// Parameters:
+//   note: Input MIDI note number (0-127)
+//   intervals_buf: Buffer containing scale intervals in semitones from root (must be sorted ascending)
+//   root_note: Root note of the scale (0-11, where 0=C, 1=C#, etc.)
+//   previous_note: Previous note for context in rounding decisions
+// Returns: fitted_note, scale_index (the fitted MIDI note and its scale degree index)
+fit(note, intervals_buf, root_note, previous_note) {
+    // Clamp input note to valid MIDI range (0-127) and convert to integer
+    input_note = max(0, min(127, floor(note)));
+
+    // Standard 12-tone equal temperament
+    steps_per_octave = 12;
+    
+    octave_base_note = floor(input_note / steps_per_octave) * steps_per_octave;
+    
+    // If the note is already the root, return it unchanged
+    if(input_note == octave_base_note) {
+        return input_note, 0;
+    }
+
+    // Calculate how many semitones this note is from the root (0-11)
+    interval_from_root = input_note - octave_base_note;
+
+    // Initialize with default value (will be overwritten)
+    chromatic_fit = -1;
+    scale_index = -1; // initialize to -1 to indicate no match found
+    
+    // Search through the scale intervals to find the best fit for the interval_from_root
+    for(i = 0; i < dim(intervals_buf); i+=1) {
+        test_interval = peek(intervals_buf, i);
+        
+        // Exact match found - use this scale degree and break out of the loop
+        if(test_interval == interval_from_root) {
+            scale_index = i;
+            chromatic_fit = test_interval;
+            break; // break out of the loop
+        } 
+        // Found the first interval larger than our target and break out of the loop
+        else if (test_interval > interval_from_root) {
+            // Smart rounding: if note increased by 1 from previous, round up
+            // otherwise, round down to the previous scale degree
+            round_direction = 0;
+            if(previous_note >= 0) {
+                round_direction = (input_note - previous_note) == 1;
+            }
+            scale_index = round_direction ? i : i-1;
+            chromatic_fit = peek(intervals_buf, scale_index);
+            break; // break out of the loop
+        }
+    }
+
+    // Combine the fitted interval with the octave base to get final MIDI note
+    fitted_note = chromatic_fit + octave_base_note;
+    return fitted_note, scale_index;
+    // return fitted_note;
+}
+
+// Transposes a note by a specified number of scale degrees
+// Parameters:
+//   note: Input MIDI note number (0-127)
+//   amt: Number of scale degrees to transpose (can be negative)
+//   intervals_buf: Buffer containing scale intervals in semitones from root
+//   root_note: Root note of the scale (0-11)
+//   previous_note: Previous note for context in fitting
+//Returns: Transposed MIDI note number
+// 
+
+transpose_degrees(note, amt, intervals_buf, root_note, previous_note) {
+    steps_per_octave = 12;
+
+    // initialize variables
+    ftd = -1;
+    fitted_ix = -1;
+
+    // First fit the input note to the scale
+    ftd, fitted_ix = fit(note, intervals_buf, root_note, previous_note);
+
+	// convert amt to integer and clamp to prevent out-of-bounds transposition
+    amt = max(0 - ftd, min(127 - ftd, floor(amt)));
+
+	// Calculate the difference between original and fitted note
+    diff = note - ftd;
+
+	 // Adjust transpose amount based on the fitting difference
+    if(diff != 0) {
+        if(amt > 0) {
+            // For upward transposition, only consider positive differences
+            diff = max(0, diff);
+        } else if (amt < 0) {   
+            // For downward transposition, only consider negative differences
+            diff = min(0, diff);
+        }
+        // Adjust transpose amount by the fitting difference
+        amt -= diff;  // Fixed: was "fitDiff" which is undefined
+    }
+    note_ = ftd;
+
+    // Calculate the interval for transposition
+    // This represents the delta between the note and its fitted value
+    xpose_interval = ftd - note_;
+    chromatic = wrap(xpose_interval, 0, steps_per_octave);
+    interval_from_root = wrap(chromatic - root_note, 0, steps_per_octave);
+    octave_base_note = ftd - interval_from_root; 
+    
+    length = scale_length(intervals_buf);
+    // Calculate the target scale degree after transposition
+    xpose_scale_degree = wrap(amt + fitted_ix, 0, length);
+    
+    // Calculate how many octaves to add
+    xpose_octaves = floor((amt + fitted_ix) / length);
+    
+    // Apply the transposition: add the target interval and octave offset
+    xpose_interval += peek(intervals_buf, xpose_scale_degree) + xpose_octaves * steps_per_octave;
+    
+    return xpose_interval + octave_base_note;
+}
+
+// Simple semitone transposition (chromatic transposition)
+// Parameters:
+//   note: Input MIDI note number (0-127)
+//   semitones: Number of semitones to transpose (can be negative)
+// Returns: Transposed MIDI note number
+transpose_semitones(note, semitones) {
+    return note + semitones;
+}
+    
+
