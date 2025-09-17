@@ -792,35 +792,35 @@
 		"dependency_cache" : [ 			{
 				"name" : "pdm.scale.fit.gendsp",
 				"bootpath" : "~/Documents/Max 9/Packages/pdm.scale/code",
-				"patcherrelativepath" : "../code",
+				"patcherrelativepath" : "../../code",
 				"type" : "gDSP",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "pdm.scale.length.gendsp",
 				"bootpath" : "~/Documents/Max 9/Packages/pdm.scale/code",
-				"patcherrelativepath" : "../code",
+				"patcherrelativepath" : "../../code",
 				"type" : "gDSP",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "pdm.scale.lib.genexpr",
 				"bootpath" : "~/Documents/Max 9/Packages/pdm.scale/code",
-				"patcherrelativepath" : "../code",
+				"patcherrelativepath" : "../../code",
 				"type" : "GenX",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "pdm.scale.validate.gendsp",
 				"bootpath" : "~/Documents/Max 9/Packages/pdm.scale/code",
-				"patcherrelativepath" : "../code",
+				"patcherrelativepath" : "../../code",
 				"type" : "gDSP",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "pdm.scale.xpose.gendsp",
 				"bootpath" : "~/Documents/Max 9/Packages/pdm.scale/code",
-				"patcherrelativepath" : "../code",
+				"patcherrelativepath" : "../../code",
 				"type" : "gDSP",
 				"implicit" : 1
 			}

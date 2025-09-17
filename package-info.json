@@ -1,7 +1,7 @@
 {
 	"name" : "pdm.scale",
 	"displayname" : "",
-	"version" : "0.1.0",
+	"version" : "0.0.2",
 	"author" : "Philip Meyer",
 	"authors" : [  ],
 	"description" : "Abstractions for working with 12-tet scales in Max and gen",
@@ -22,7 +22,7 @@
 		}
 
 	},
-	"homepatcher" : "",
+	"homepatcher" : "pdm.scale",
 	"filelist" : 	{
 		"extras" : [
 
