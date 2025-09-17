@@ -11,11 +11,11 @@ This package currently includes four gen patches:
 
 Scales are provided to the objects as a buffer containing an ascending list of semitone intervals.
 
-e.g. a Major scale would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]`. You can use the buffer name "intervals", or provide your own buffer and assign it to the "intervals" parameter of the gen/gen~ patcher. e.g. `[pdm.scale.fit @intervals ---my_intervals_buf]`
+e.g. a Major scale would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]`. You can use the buffer name "intervals", or provide your own buffer and assign it to the "intervals" parameter of the gen/gen~ patcher. e.g. `[gen pdm.scale.fit @intervals ---my_intervals_buf]`
 
 The root note of the scale is provided as a parameter to the objects.
 
-e.g. a Major scale with a root note of 0 would be provided as a buffer containing the intervals [0, 2, 4, 5, 7, 9, 11] and a root note of 0.
+e.g. a Major scale with a root note of 0 would be provided as a buffer containing the intervals `[0, 2, 4, 5, 7, 9, 11]` and a `root_note` of 0.
 
 Use `pdm.scale.maxhelp` to see how to use the library. 
 
