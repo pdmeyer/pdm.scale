@@ -2,12 +2,15 @@
 
 Utilities for working with 12 tone equal temperament scales in Max MSP.
 
+## Gen Patches
 This package currently includes four gen patches:
 
 - `pdm.scale.fit.gendsp` : fit a note to a scale
 - `pdm.scale.xpose.gendsp` : transpose a note by a specified number of scale degrees
 - `pdm.scale.validate.gendsp` : validate that a scale is formatted correctly for use in the library
 - `pdm.scale.length.gendesp` : get the length of a scale
+
+The gen patches are useful for processing events or signals in Max, MSP, gen~, or RNBO.
 
 Scales are provided to the objects as a buffer containing an ascending list of semitone intervals.
 
@@ -19,11 +22,16 @@ e.g. a Major scale with a root note of 0 would be provided as a buffer containin
 
 Use `pdm.scale.maxhelp` to see how to use the library. 
 
+## Javascript
+The repository also includes a Javascript class and examples for working with scales in Javascript.
+
+These are useful when you are already using JavaScript in your patch. For example, you may process scales in an offline process or use JavaScript inside of a Max for Live MIDI Tool.
+
+For information on this, check out `examples/scales-in-javascript.maxpat` and the API reference at `misc/JS_API_REFERENCE.md`.
+
 ## Future Enhancements:
-* Use `define` or RNBO to make it more user friendly to invoke the, fit, xpose, validate, and length objects
-    * RNBO would allow the intervals to be passed as a list, so that's nice...
-* Include a Javascript class and examples for working with scales in Javascript
-* Add help fuiles for each object
+* Use `define` or RNBO to make it more user friendly to invoke the objects.
+* Add helpfiles for each object
 * Tidy up the general help file and migrate it to be the package's main patch
 * Add refdocs
 
