@@ -34,19 +34,25 @@
 			"pdm.scale.maxhelp"
 		],
 		"docs" : [ 
-
+			"pdm.scale.fit.maxref.xml",
+			"pdm.scale.length.maxref.xml",
+			"pdm.scale.validate.maxref.xml",
+			"pdm.scale.xpose.maxref.xml"
 		],
 		"javascript" : [ 
 
 		],
 		"code" : [ 
-			"pdm.scale.genexpr",
-			"pdmq.scale.fit.gendsp",
-			"pdmq.scale.xpose.gendsp",
-			"pdmq.scale.validate.gendsp"
+			"pdm.scale.example.js",
+			"pdm.scale.fit.gendsp",
+			"pdm.scale.length.gendsp",
+			"pdm.scale.lib.genexpr",
+			"pdm.scale.lib.js",
+			"pdm.scale.validate.gendsp",
+			"pdm.scale.xpose.gendsp"
 		],
 		"examples" : [
-
+			"scales-in-javascript.maxpat"
 		]
 	}
 }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--If you edit this file, please place it in a safe place since future exports will overwrite this automatically generated reference file.-->
+<c74object name="pdm.scale.length">
+<metadatalist>
+<metadata name="author">Philip Meyer</metadata>
+<metadata name="tag">scales</metadata>
+<metadata name="tag">analysis</metadata>
+<metadata name="tag">gen~</metadata>
+<metadata name="tag">DSP</metadata>
+</metadatalist>
+<!--INLETS-->
+<inletlist>
+    <inlet id="0" type="signal">
+        <digest>
+            Trigger to calculate scale length
+        </digest>
+        <description>
+            Any signal input triggers the calculation of the scale length from the intervals buffer.
+        </description>
+    </inlet>
+</inletlist>
+<!--OUTLETS-->
+<outletlist>
+    <outlet id="0" type="signal">
+        <digest>
+            Scale length in degrees
+        </digest>
+        <description>
+            Outputs the number of degrees in the scale. Returns -1 if the scale intervals are not properly ordered.
+        </description>
+    </outlet>
+</outletlist>
+<description>
+    Calculates the length of a scale in degrees by analyzing the intervals buffer. The object validates that the scale intervals are in ascending order before calculating the length. If the first interval is not 0, the length is increased by 1 to account for the root note. Returns -1 if the scale intervals are not properly ordered.
+</description>
+<digest>Calculate the length of a scale in degrees.</digest>
+<seealsolist>
+  <seealso name="pdm.scale.fit" />
+  <seealso name="pdm.scale.validate" />
+  <seealso name="pdm.scale.xpose" />
+</seealsolist>
+</c74object>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--If you edit this file, please place it in a safe place since future exports will overwrite this automatically generated reference file.-->
+<c74object name="pdm.scale.fit">
+<metadatalist>
+<metadata name="author">Philip Meyer</metadata>
+<metadata name="tag">scales</metadata>
+<metadata name="tag">pitch</metadata>
+<metadata name="tag">gen~</metadata>
+<metadata name="tag">DSP</metadata>
+</metadatalist>
+<!--INLETS-->
+<inletlist>
+    <inlet id="0" type="signal">
+        <digest>
+            MIDI note to fit to scale
+        </digest>
+        <description>
+            Input MIDI note number (0-127) to be fitted to the current scale.
+        </description>
+    </inlet>
+</inletlist>
+<!--OUTLETS-->
+<outletlist>
+    <outlet id="0" type="signal">
+        <digest>
+            Fitted MIDI note
+        </digest>
+        <description>
+            The left outlet outputs the fitted MIDI note number that corresponds to the nearest note in the current scale.
+        </description>
+    </outlet>
+    <outlet id="1" type="signal">
+        <digest>
+            Scale degree index
+        </digest>
+        <description>
+            The right outlet outputs the scale degree index (0-based) of the fitted note within the scale intervals.
+        </description>
+    </outlet>
+</outletlist>
+<!--ARGUMENTS-->
+<objarglist>
+    <objarg name="root_note" optional="1" type="int">
+        <digest>
+            Set the root note of the scale
+        </digest>
+        <description>
+            Sets the root note of the scale (0-11, where 0=C, 1=C#, 2=D, etc.). Defaults to 0 (C).
+        </description>
+    </objarg>
+</objarglist>
+<description>
+    Fits input MIDI notes to the nearest note in a specified scale. The object uses a buffer named "intervals" containing the scale intervals in semitones from the root note. Features smart rounding that considers the previous note for context when fitting ambiguous cases. The object outputs both the fitted MIDI note and its scale degree index.
+</description>
+<digest>Fit MIDI notes to scale degrees.</digest>
+<seealsolist>
+  <seealso name="pdm.scale.length" />
+  <seealso name="pdm.scale.validate" />
+  <seealso name="pdm.scale.xpose" />
+</seealsolist>
+</c74object>

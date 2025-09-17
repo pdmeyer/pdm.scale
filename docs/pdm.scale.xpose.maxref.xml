@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--If you edit this file, please place it in a safe place since future exports will overwrite this automatically generated reference file.-->
+<c74object name="pdm.scale.xpose">
+<metadatalist>
+<metadata name="author">Philip Meyer</metadata>
+<metadata name="tag">scales</metadata>
+<metadata name="tag">transposition</metadata>
+<metadata name="tag">gen~</metadata>
+<metadata name="tag">DSP</metadata>
+</metadatalist>
+<!--INLETS-->
+<inletlist>
+    <inlet id="0" type="signal">
+        <digest>
+            MIDI note to transpose
+        </digest>
+        <description>
+            Input MIDI note number (0-127) to be transposed by scale degrees.
+        </description>
+    </inlet>
+    <inlet id="1" type="signal">
+        <digest>
+            Transposition amount in scale degrees
+        </digest>
+        <description>
+            Number of scale degrees to transpose the input note. Can be positive or negative.
+        </description>
+    </inlet>
+</inletlist>
+<!--OUTLETS-->
+<outletlist>
+    <outlet id="0" type="signal">
+        <digest>
+            Transposed MIDI note
+        </digest>
+        <description>
+            The transposed MIDI note number, fitted to the scale and transposed by the specified number of scale degrees.
+        </description>
+    </outlet>
+</outletlist>
+<!--ARGUMENTS-->
+<objarglist>
+    <objarg name="root_note" optional="1" type="int">
+        <digest>
+            Set the root note of the scale
+        </digest>
+        <description>
+            Sets the root note of the scale (0-11, where 0=C, 1=C#, 2=D, etc.). Defaults to 0 (C).
+        </description>
+    </objarg>
+</objarglist>
+<description>
+    Transposes MIDI notes by scale degrees (diatonic transposition). The object first fits the input note to the current scale, then transposes it by the specified number of scale degrees. The transposition respects the scale structure and automatically handles octave wrapping. The object uses a buffer named "intervals" containing the scale intervals in semitones from the root note.
+</description>
+<digest>Transpose MIDI notes by scale degrees.</digest>
+<seealsolist>
+  <seealso name="pdm.scale.fit" />
+  <seealso name="pdm.scale.length" />
+  <seealso name="pdm.scale.validate" />
+</seealsolist>
+</c74object>

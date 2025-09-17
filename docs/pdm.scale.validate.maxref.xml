@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--If you edit this file, please place it in a safe place since future exports will overwrite this automatically generated reference file.-->
+<c74object name="pdm.scale.validate">
+<metadatalist>
+<metadata name="author">Philip Meyer</metadata>
+<metadata name="tag">scales</metadata>
+<metadata name="tag">validation</metadata>
+<metadata name="tag">gen~</metadata>
+<metadata name="tag">DSP</metadata>
+</metadatalist>
+<!--INLETS-->
+<inletlist>
+    <inlet id="0" type="signal">
+        <digest>
+            Trigger to validate scale intervals
+        </digest>
+        <description>
+            Any signal input triggers the validation of the scale intervals in the intervals buffer.
+        </description>
+    </inlet>
+</inletlist>
+<!--OUTLETS-->
+<outletlist>
+    <outlet id="0" type="signal">
+        <digest>
+            Validation result
+        </digest>
+        <description>
+            Outputs 1 if the scale intervals are properly ordered (ascending), 0 if they are not.
+        </description>
+    </outlet>
+</outletlist>
+<description>
+    Validates that a scale intervals buffer contains properly ordered intervals. The object checks that each interval in the buffer is greater than or equal to the previous interval, ensuring the scale is in ascending order. This validation is essential before using scale operations like fitting or transposition.
+</description>
+<digest>Validate that scale intervals are properly ordered.</digest>
+<seealsolist>
+  <seealso name="pdm.scale.fit" />
+  <seealso name="pdm.scale.length" />
+  <seealso name="pdm.scale.xpose" />
+</seealsolist>
+</c74object>
