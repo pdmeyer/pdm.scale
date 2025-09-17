@@ -104,10 +104,6 @@ fit(note, intervals_buf, root_note, previous_note) {
 transpose_degrees(note, amt, intervals_buf, root_note, previous_note) {
     steps_per_octave = 12;
 
-    // initialize variables
-    ftd = -1;
-    fitted_ix = -1;
-
     // First fit the input note to the scale
     ftd, fitted_ix = fit(note, intervals_buf, root_note, previous_note);
 
@@ -129,14 +125,12 @@ transpose_degrees(note, amt, intervals_buf, root_note, previous_note) {
         // Adjust transpose amount by the fitting difference
         amt -= diff;  // Fixed: was "fitDiff" which is undefined
     }
-    note_ = ftd;
 
     // Calculate the interval for transposition
     // This represents the delta between the note and its fitted value
-    xpose_interval = ftd - note_;
-    chromatic = wrap(xpose_interval, 0, steps_per_octave);
-    interval_from_root = wrap(chromatic - root_note, 0, steps_per_octave);
-    octave_base_note = ftd - interval_from_root; 
+    xpose_interval = ftd - note;
+    octave_base_note = floor(ftd / steps_per_octave) * steps_per_octave;
+    interval_from_root = ftd - octave_base_note;
     
     length = scale_length(intervals_buf);
     // Calculate the target scale degree after transposition
