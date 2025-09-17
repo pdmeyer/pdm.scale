@@ -1,6 +1,6 @@
 # pdm.scale
 
-A library for working with 12 tone equal temperament scales in Max MSP.
+Utilities for working with 12 tone equal temperament scales in Max MSP.
 
 This package currently includes four gen patches:
 
