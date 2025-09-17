@@ -166,7 +166,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 40.0, 230.0, 100.0, 22.0 ],
+					"patching_rect" : [ 40.0, 263.0, 100.0, 22.0 ],
 					"text" : "prepend setscale"
 				}
 
@@ -177,7 +177,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 81.0, 12.0, 323.0, 20.0 ],
+					"patching_rect" : [ 81.0, 45.0, 323.0, 20.0 ],
 					"text" : "A MIDI Tool context dictionary containing a scale object"
 				}
 
@@ -190,7 +190,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 40.0, 5.0, 24.0, 24.0 ]
+					"patching_rect" : [ 40.0, 33.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -205,7 +205,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 5,
 					"outlettype" : [ "dictionary", "", "", "", "" ],
-					"patching_rect" : [ 40.0, 34.0, 432.0, 140.0 ],
+					"patching_rect" : [ 40.0, 67.0, 432.0, 140.0 ],
 					"saved_object_attributes" : 					{
 						"parameter_enable" : 0,
 						"parameter_mappable" : 0
