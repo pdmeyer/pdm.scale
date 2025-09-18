@@ -31,11 +31,9 @@
 
 		],
 		"help" : [ 
-			"pdm.scale.maxhelp"
 		],
 		"docs" : [ 
 			"pdm.scale.fit.maxref.xml",
-			"pdm.scale.length.maxref.xml",
 			"pdm.scale.validate.maxref.xml",
 			"pdm.scale.xpose.maxref.xml"
 		],
@@ -45,7 +43,6 @@
 		"code" : [ 
 			"pdm.scale.example.js",
 			"pdm.scale.fit.gendsp",
-			"pdm.scale.length.gendsp",
 			"pdm.scale.lib.genexpr",
 			"pdm.scale.lib.js",
 			"pdm.scale.validate.gendsp",
