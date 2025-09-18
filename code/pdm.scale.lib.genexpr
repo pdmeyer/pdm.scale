@@ -3,34 +3,20 @@
 //   buffer: Buffer containing scale intervals in semitones from root
 // Returns: 1 if intervals are in ascending order, 0 if not
 validate_intervals(buffer) {
+    valid = 1;
     // Check each interval to ensure it's greater than or equal to the previous one
-    status = 1;
-    for(i = 1; i < dim(buffer); i+=1) {
-        diff = peek(buffer, i) - peek(buffer, i-1);
-
-        if(diff < 0) {
-            status = 0;
-            break;
+    if(peek(buffer, 0) != 0) {
+        valid = 0;
+    } else {
+        for(i = 1; i < dim(buffer); i+=1) {
+            diff = peek(buffer, i) - peek(buffer, i-1);
+            if(diff < 0) {
+                valid = 0;
+                break;
+            }
         }
     }
-    return status;
-    
-}
-
-// Returns the length of a scale in semitones
-// Parameters:
-//   intervals_buf: Buffer containing scale intervals in semitones from root
-// Returns: Length of the scale in degrees
-scale_length(intervals_buf) {
-    if(validate_intervals(intervals_buf) == 0) {
-        return -1;
-    }
-
-    // if the first interval is not 0, add 1 to the length
-    offset = peek(intervals_buf, 0) != 0;
-
-    // return the length of the scale in degrees
-    return dim(intervals_buf) + offset;
+    return valid;
 }
 
 // Fits an input MIDI note to the nearest note in a specified scale
@@ -40,55 +26,107 @@ scale_length(intervals_buf) {
 //   root_note: Root note of the scale (0-11, where 0=C, 1=C#, etc.)
 //   previous_note: Previous note for context in rounding decisions
 // Returns: fitted_note, scale_index (the fitted MIDI note and its scale degree index)
-fit(note, intervals_buf, root_note, previous_note) {
-    // Clamp input note to valid MIDI range (0-127) and convert to integer
-    input_note = max(0, min(127, floor(note)));
+fit(note, intervals_buf, root_note, previous_note, round_mode) {
+    //round_modes: 0 = down, 1 = up, 2 = nearest, 3 = smart
 
+    done = 0;
     // Standard 12-tone equal temperament
     steps_per_octave = 12;
+
+    // Clamp input note to valid MIDI range (0-127) and convert to integer
+    input_note = max(0, min(127, floor(note)));
     
-    octave_base_note = floor(input_note / steps_per_octave) * steps_per_octave;
-    
-    // If the note is already the root, return it unchanged
-    if(input_note == octave_base_note) {
-        return input_note, 0;
+    // Convert input note to chromatic value 0 - 11
+    chromatic = wrap(input_note, 0, steps_per_octave);
+
+    fitted_note = -1;
+    scale_degree = -1;
+
+    if(chromatic == root_note) {
+        done = 1;
+        fitted_note = input_note;
+        scale_degree = 0;
     }
-
-    // Calculate how many semitones this note is from the root (0-11)
-    interval_from_root = input_note - octave_base_note;
-
-    // Initialize with default value (will be overwritten)
-    chromatic_fit = -1;
-    scale_index = -1; // initialize to -1 to indicate no match found
     
-    // Search through the scale intervals to find the best fit for the interval_from_root
-    for(i = 0; i < dim(intervals_buf); i+=1) {
-        test_interval = peek(intervals_buf, i);
-        
-        // Exact match found - use this scale degree and break out of the loop
-        if(test_interval == interval_from_root) {
-            scale_index = i;
-            chromatic_fit = test_interval;
-            break; // break out of the loop
-        } 
-        // Found the first interval larger than our target and break out of the loop
-        else if (test_interval > interval_from_root) {
-            // Smart rounding: if note increased by 1 from previous, round up
-            // otherwise, round down to the previous scale degree
-            round_direction = 0;
-            if(previous_note >= 0) {
-                round_direction = (input_note - previous_note) == 1;
+    if(!done) {
+        fitted_scale_deg = -1;
+        fitted_scale_interval = -1;
+        root_relative = wrap(chromatic - root_note, 0, steps_per_octave);
+        length = dim(intervals_buf);
+
+        for(i = 1; i < length; i+=1) {
+            scale_interval = peek(intervals_buf, i);
+
+            //check if note is already in scale
+            if(scale_interval == root_relative) {
+                done = 1;
+                fitted_note = input_note;
+                scale_degree = i;
+                break;
+
+            //if note insn't in scale, fall back to previous scale degree
+            } else if (scale_interval > root_relative) {
+                rm  = floor(round_mode);
+                //round down
+                if(rm == 0) {
+                    fitted_scale_deg = i - 1;
+                    fitted_scale_interval = peek(intervals_buf, fitted_scale_deg);
+                //round up
+                } else if(rm == 1) {
+                    fitted_scale_deg = i;
+                    fitted_scale_interval = peek(intervals_buf, fitted_scale_deg);
+                //round to nearest note
+                } else if(rm == 2) {
+                    previous_interval = peek(intervals_buf, i - 1);
+                    prev_distance = abs(previous_interval - root_relative);
+                    curr_distance = abs(scale_interval - root_relative);
+                    fitted_scale_interval = prev_distance <= curr_distance ? previous_interval : scale_interval;
+                //"smart" - round down unless the input note is 1 semitone above the previous note
+                } else if(rm == 3) {
+                    fitted_scale_deg = input_note - previous_note == 1 ? i : i - 1;
+                    fitted_scale_interval = peek(intervals_buf, fitted_scale_deg);
+                }
+
+                fit_diff = fitted_scale_interval - root_relative;
+                done = 1;
+                fitted_note = input_note + fit_diff;
+                scale_degree = fitted_scale_deg;
+                break;
             }
-            scale_index = round_direction ? i : i-1;
-            chromatic_fit = peek(intervals_buf, scale_index);
-            break; // break out of the loop
         }
-    }
 
-    // Combine the fitted interval with the octave base to get final MIDI note
-    fitted_note = chromatic_fit + octave_base_note;
-    return fitted_note, scale_index;
-    // return fitted_note;
+        if(!done) {
+            // if note still hasn't been found, then it's between the last and first scale degrees
+            rm = floor(round_mode);
+            first = 0;
+            last = length - 1;
+            
+
+            //round down
+            if(rm == 0) {
+                fitted_scale_deg = last;
+            //round up
+            } else if(rm == 1) {
+                fitted_scale_deg = first;
+            //round to nearest note
+            } else if(rm == 2) {
+                first_interval = peek(intervals_buf, first) + steps_per_octave; //should be 12
+                last_interval = peek(intervals_buf, last);
+                prev_distance = abs(last_interval - root_relative);
+                curr_distance = abs(first_interval - root_relative);
+                fitted_scale_deg = prev_distance <= curr_distance ? last : first;
+            //"smart" - round down unless the input note is 1 semitone above the previous note
+            } else if(rm == 3) {
+                fitted_scale_deg = input_note - previous_note == 1 ? first : last;
+            }
+
+            fitted_scale_interval = peek(intervals_buf, fitted_scale_deg);
+            fit_diff = fitted_scale_interval - root_relative;
+            fitted_note = input_note + fit_diff;
+            scale_degree = fitted_scale_deg;
+        }
+    }    
+    return fitted_note, scale_degree;
 }
 
 // Transposes a note by a specified number of scale degrees
@@ -101,48 +139,37 @@ fit(note, intervals_buf, root_note, previous_note) {
 //Returns: Transposed MIDI note number
 // 
 
-transpose_degrees(note, amt, intervals_buf, root_note, previous_note) {
+transpose_degrees(note, amt, intervals_buf, root_note, previous_note, round_mode) {
     steps_per_octave = 12;
 
     // First fit the input note to the scale
-    ftd, fitted_ix = fit(note, intervals_buf, root_note, previous_note);
+    // Also get the scale degree of the note, relative to the root
+    ftd, fitted_deg = fit(note, intervals_buf, root_note, previous_note, round_mode);
 
 	// convert amt to integer and clamp to prevent out-of-bounds transposition
-    amt = max(0 - ftd, min(127 - ftd, floor(amt)));
+    amt_ = max(0 - ftd, min(127 - ftd, floor(amt)));
 
-	// Calculate the difference between original and fitted note
-    diff = note - ftd;
+    // if the amount is 0, return the fitted note
+    xposed = ftd;
+    xpose_deg = fitted_deg;
+    scale_length = dim(intervals_buf);
+    //xpose_octaves = 0;
+    //xpose_step = 0;
+    //relative_step = 0;
 
-	 // Adjust transpose amount based on the fitting difference
-    if(diff != 0) {
-        if(amt > 0) {
-            // For upward transposition, only consider positive differences
-            diff = max(0, diff);
-        } else if (amt < 0) {   
-            // For downward transposition, only consider negative differences
-            diff = min(0, diff);
-        }
-        // Adjust transpose amount by the fitting difference
-        amt -= diff;  // Fixed: was "fitDiff" which is undefined
+    if(amt_ != 0 ) {
+        //scale_length = dim(intervals_buf);
+        // Calculate the interval for transposition
+        xpose_deg = wrap(fitted_deg + amt_, 0, scale_length);
+
+        fitted_step = peek(intervals_buf, fitted_deg);
+        xpose_step = peek(intervals_buf, xpose_deg);
+        relative_step = xpose_step - fitted_step;
+        xpose_octaves = floor((fitted_deg + amt_) / scale_length);
+        xpose_amt = relative_step + (xpose_octaves * steps_per_octave);
+        xposed = ftd + xpose_amt;
     }
-
-    // Calculate the interval for transposition
-    // This represents the delta between the note and its fitted value
-    xpose_interval = ftd - note;
-    octave_base_note = floor(ftd / steps_per_octave) * steps_per_octave;
-    interval_from_root = ftd - octave_base_note;
-    
-    length = scale_length(intervals_buf);
-    // Calculate the target scale degree after transposition
-    xpose_scale_degree = wrap(amt + fitted_ix, 0, length);
-    
-    // Calculate how many octaves to add
-    xpose_octaves = floor((amt + fitted_ix) / length);
-    
-    // Apply the transposition: add the target interval and octave offset
-    xpose_interval += peek(intervals_buf, xpose_scale_degree) + xpose_octaves * steps_per_octave;
-    
-    return xpose_interval + octave_base_note;
+    return xposed, xpose_deg;
 }
 
 // Simple semitone transposition (chromatic transposition)

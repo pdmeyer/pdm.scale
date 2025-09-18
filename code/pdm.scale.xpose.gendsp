@@ -18,6 +18,17 @@
 		"integercoordinates" : 1,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-2",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 668.0, 303.0, 35.0, 22.0 ],
+					"text" : "out 2"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "newobj",
 					"numinlets" : 0,
@@ -30,15 +41,15 @@
 			}
 , 			{
 				"box" : 				{
-					"code" : "require(\"pdm.scale.lib\");\r\n\r\nParam root_note(0, min=0, max=11);\r\nBuffer intervals(\"intervals\");\r\nHistory active_note;\r\n\r\nnote = in1;\r\namt = in2;\r\n\r\ntransposed = transpose_degrees(note, amt, intervals, root_note, active_note);\r\nout1 = transposed;\r\nactive_note = transposed;\r\n",
+					"code" : "require(\"pdm.scale.lib\");\r\n\r\nParam root_note(0, min=0, max=11);\r\nParam round_mode(0, min=0, max=3);\r\nBuffer intervals(\"intervals\");\r\nHistory active_note;\r\n\r\nnote = in1;\r\namt = in2;\r\ntransposed, scale_deg = transpose_degrees(note, amt, intervals, root_note, active_note, round_mode);\r\nout1 = transposed;\r\nout2 = scale_deg;\r\nactive_note = transposed;\r\n",
 					"fontface" : 0,
 					"fontname" : "<Monospaced>",
 					"fontsize" : 12.0,
 					"id" : "obj-5",
 					"maxclass" : "codebox",
 					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
 					"patching_rect" : [ 50.0, 43.0, 637.0, 245.0 ]
 				}
 
@@ -71,6 +82,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-5", 0 ],
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 0 ],
+					"source" : [ "obj-5", 1 ]
 				}
 
 			}

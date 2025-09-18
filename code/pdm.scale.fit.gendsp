@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "dsp.gen",
-		"rect" : [ 59.0, 119.0, 894.0, 450.0 ],
+		"rect" : [ 59.0, 119.0, 956.0, 829.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"assistshowspatchername" : 0,
 		"commentary" : "",
@@ -22,14 +22,14 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 555.0, 319.0, 35.0, 22.0 ],
+					"patching_rect" : [ 764.0, 327.0, 35.0, 22.0 ],
 					"text" : "out 2"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"code" : "require (\"pdm.scale.lib\");\r\n\r\nParam root_note(0, min=0, max=11);\r\nBuffer intervals(\"intervals\");\r\nHistory active_note;\r\n\r\nfitted_pitch, scale_index = fit(in1, intervals, root_note, active_note);\r\n//fitted_pitch, scale_index = test(in1);\r\n\r\nout1 = fitted_pitch;\r\nout2 = scale_index;\r\n\r\nactive_note = fitted_pitch;",
+					"code" : "require (\"pdm.scale.lib\");\r\n\r\nParam root_note(0, min=0, max=11);\r\nParam round_mode(0, min=0, max=3);\r\n\r\nBuffer intervals(\"intervals\");\r\nHistory active_note;\r\n\r\nfitted_pitch, scale_index = fit(in1, intervals, root_note, active_note, round_mode);\r\n\r\nout1 = fitted_pitch;\r\nout2 = scale_index;\r\n\r\nactive_note = fitted_pitch;",
 					"fontface" : 0,
 					"fontname" : "<Monospaced>",
 					"fontsize" : 12.0,
@@ -38,7 +38,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 50.0, 67.0, 524.0, 236.0 ]
+					"patching_rect" : [ 50.0, 47.0, 733.0, 264.0 ]
 				}
 
 			}
@@ -60,7 +60,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 50.0, 319.0, 35.0, 22.0 ],
+					"patching_rect" : [ 50.0, 327.0, 35.0, 22.0 ],
 					"text" : "out 1"
 				}
 
