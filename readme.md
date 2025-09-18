@@ -8,7 +8,6 @@ This package currently includes four gen patches:
 - `pdm.scale.fit.gendsp` : fit a note to a scale
 - `pdm.scale.xpose.gendsp` : transpose a note by a specified number of scale degrees
 - `pdm.scale.validate.gendsp` : validate that a scale is formatted correctly for use in the library
-- `pdm.scale.length.gendesp` : get the length of a scale
 
 The gen patches are useful for processing events or signals in Max, MSP, gen~, or RNBO. You can use the component with either the signal-processing `gen~` or event `gen` objects in Max.
 
