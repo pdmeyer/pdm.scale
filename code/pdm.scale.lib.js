@@ -189,7 +189,7 @@ class Scale {
 
     /**
      * Sets the round direction for pitch fitting
-     * @param {string} direction - Round direction (down, up)
+     * @param {number} direction - Round direction (0 = down, 1 = up)
      * @throws {Error} If direction is not a number
      */
     set round_direction(direction) {
@@ -197,7 +197,7 @@ class Scale {
             error("round_direction must be a number", this.constructor.name, '\n');
             return;
         }
-        this.#round_direction = direction === 'up';
+        this.#round_direction = direction;
     }
 
     /**
@@ -210,12 +210,12 @@ class Scale {
 
     /**
      * Sets the round mode for pitch fitting
-     * @param {number} mode - Round mode (0=down, 1=up, 2=nearest, 3=smart)
-     * @throws {Error} If mode is not a valid number
+     * @param {string} mode - Round mode (down, up, nearest, smart)
+     * @throws {Error} If mode is not a valid string
      */
     set round_mode(mode) {
         if(typeof mode !== 'string' || !['down', 'up', 'nearest', 'smart'].includes(mode)) {
-            error("round_mode must be a number between 0 and 3", this.constructor.name, '\n');
+            error("round_mode must be one of: down, up, nearest, smart", this.constructor.name, '\n');
             return;
         }
         this.#round_mode = mode;
@@ -255,7 +255,7 @@ class Scale {
      * Gets the difference between a note and its fitted version
      * @param {number} note - MIDI note number (0-127)
      * @param {number} [previousNote] - Previous note for context
-     * @param {number} [roundMode] - Round mode for fitting
+     * @param {string} [roundMode] - Round mode for fitting (down, up, nearest, smart)
      * @returns {number} The difference (fitted note - original note)
      */
     getFitDifference(note, previousNote, roundMode) {
@@ -282,7 +282,7 @@ class Scale {
      * 
      * @param {number|null} inputNote - MIDI note number (0-127) or null
      * @param {number} [previousNote] - Previous note for context in smart rounding
-     * @param {number} [roundMode] - Round mode override (0=down, 1=up, 2=nearest, 3=smart)
+     * @param {string} [roundMode] - Round mode override (down, up, nearest, smart)
      * @returns {number} The fitted MIDI note number
      * @example
      * // Fit note 61 (C#) to C major scale
@@ -297,7 +297,7 @@ class Scale {
         inputNote = Math.min(Math.max(Math.floor(inputNote), 0), 127);
         
         // Use provided round mode or instance default
-        const rm = typeof roundMode !== 'undefined' ? Math.floor(roundMode) : this.#round_mode;
+        const rm = typeof roundMode !== 'undefined' ? roundMode : this.#round_mode;
         
         // Handle auto-round logic
         if(this.#active_note && this.#auto_round) {   
@@ -449,7 +449,7 @@ class Scale {
      * @param {number} [note] - MIDI note number (0-127). If not provided, uses active_note or 60
      * @param {number} [amt] - Number of scale degrees to transpose. If not provided, uses note as amount
      * @param {number} [previousNote] - Previous note for context in fitting
-     * @param {number} [roundMode] - Round mode for fitting
+     * @param {string} [roundMode] - Round mode for fitting (down, up, nearest, smart)
      * @returns {number} The transposed MIDI note number
      * @example
      * // Transpose C (60) up 2 degrees in C major scale
@@ -503,7 +503,7 @@ class Scale {
             return {
                 distance: end - start,
                 start: start,
-                end: start
+                end: end
             }
         } else {
             let inverted = false;
