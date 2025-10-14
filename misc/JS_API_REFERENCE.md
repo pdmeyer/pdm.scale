@@ -76,10 +76,15 @@ const majorScale = new Scale({
 - **Description:** True if auto-round is enabled, false otherwise
 - **Read-only:** Yes
 
+#### `round_mode`
+- **Type:** `string`
+- **Description:** Rounding mode (down, up, nearest, smart)
+- **Read-only:** No
+
 #### `round_direction`
-- **Type:** `boolean`
-- **Description:** True if rounding up, false if rounding down
-- **Read-only:** Yes
+- **Type:** `number`
+- **Description:** Round direction for auto-rounding (0 = down, 1 = up)
+- **Read-only:** No
 
 #### `steps_per_octave`
 - **Type:** `number`
@@ -109,9 +114,13 @@ const majorScale = new Scale({
 - **Type:** `number|boolean`
 - **Description:** Sets the auto-round behavior (1/true = enabled, 0/false = disabled). Auto-rounding enables "smart rounding" where the scale degree is rounded up if the note increased by 1 from the previous note, otherwise it is rounded down. This is useful when advancing through notes in a menu or number box in Max.
 
+#### `round_mode`
+- **Type:** `string`
+- **Description:** Sets the round mode for pitch fitting (down, up, nearest, smart). Will be overwritten by auto-rounding if enabled.
+
 #### `round_direction`
 - **Type:** `number`
-- **Description:** Sets the round direction for pitch fitting (0 = down, 1 = up). Will be overwritten by auto-rounding if enabled.
+- **Description:** Sets the round direction for auto-rounding (0 = down, 1 = up)
 
 #### `steps_per_octave`
 - **Type:** `number`
