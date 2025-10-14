@@ -549,7 +549,6 @@ class Scale {
     }
 
     /**
-     * @deprecated Use isInScale() instead
      * @param {number} note - MIDI note number
      * @returns {boolean} True if the note is in scale
      */
