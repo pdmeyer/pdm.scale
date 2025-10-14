@@ -100,7 +100,6 @@ fit(note, intervals_buf, root_note, previous_note, round_mode) {
             rm = floor(round_mode);
             first = 0;
             last = length - 1;
-            
 
             //round down
             if(rm == 0) {
@@ -153,9 +152,6 @@ transpose_degrees(note, amt, intervals_buf, root_note, previous_note, round_mode
     xposed = ftd;
     xpose_deg = fitted_deg;
     scale_length = dim(intervals_buf);
-    //xpose_octaves = 0;
-    //xpose_step = 0;
-    //relative_step = 0;
 
     if(amt_ != 0 ) {
         //scale_length = dim(intervals_buf);
@@ -178,7 +174,7 @@ transpose_degrees(note, amt, intervals_buf, root_note, previous_note, round_mode
 //   semitones: Number of semitones to transpose (can be negative)
 // Returns: Transposed MIDI note number
 transpose_semitones(note, semitones) {
-    return note + semitones;
+    return floor(note) + floor(semitones);
 }
     
 
