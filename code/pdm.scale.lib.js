@@ -45,6 +45,8 @@ class Scale {
     /** @private */
     #round_direction = 0;
     /** @private */
+    #round_mode = 'down'; // down, up, nearest, smart
+    /** @private */
     #steps_per_octave = 12;
     
     /**
@@ -79,7 +81,7 @@ class Scale {
 
     get valid_notes() {
         if(this.#valid_notes.length === 0) {
-            this.#valid_notes = this.#getAllValidNotes();
+            this.#valid_notes = this.getAllValidNotes();
         }
         return this.#valid_notes;
     }
@@ -187,7 +189,7 @@ class Scale {
 
     /**
      * Sets the round direction for pitch fitting
-     * @param {number} direction - Round direction (0 = down, 1 = up)
+     * @param {string} direction - Round direction (down, up)
      * @throws {Error} If direction is not a number
      */
     set round_direction(direction) {
@@ -195,7 +197,28 @@ class Scale {
             error("round_direction must be a number", this.constructor.name, '\n');
             return;
         }
-        this.#round_direction = direction !== 0;
+        this.#round_direction = direction === 'up';
+    }
+
+    /**
+     * Gets the current round mode
+     * @returns {string} Round mode (down, up, nearest, smart)
+     */
+    get round_mode() {
+        return this.#round_mode;
+    }
+
+    /**
+     * Sets the round mode for pitch fitting
+     * @param {number} mode - Round mode (0=down, 1=up, 2=nearest, 3=smart)
+     * @throws {Error} If mode is not a valid number
+     */
+    set round_mode(mode) {
+        if(typeof mode !== 'string' || !['down', 'up', 'nearest', 'smart'].includes(mode)) {
+            error("round_mode must be a number between 0 and 3", this.constructor.name, '\n');
+            return;
+        }
+        this.#round_mode = mode;
     }
     
     /**
@@ -207,9 +230,9 @@ class Scale {
      * @throws {Error} If required properties are missing from scale_obj
      */
     setParams(scale_obj) {
-        var properties = ["scale_mode", "scale_intervals", "root_note"];
-        for(var i = 0; i < properties.length; i++) {
-            var property = properties[i];
+        const properties = ["scale_mode", "scale_intervals", "root_note"];
+        for(let i = 0; i < properties.length; i++) {
+            const property = properties[i];
             if(!scale_obj.hasOwnProperty(property)) {
                 error("Invalid scale object. Missing property", property,'\n');
             } 
@@ -224,19 +247,31 @@ class Scale {
      * @returns {boolean} True if the note is in scale, false otherwise
      */
     isInScale(note) {
-        if(this.#valid_notes.length === 0) {
-            this.#valid_notes = this.#getAllValidNotes();
-        }
-        return this.#valid_notes.includes(note);
+        const fitted = this.fitPitch(note);
+        return fitted === note;
     }
     
     /**
      * Gets the difference between a note and its fitted version
      * @param {number} note - MIDI note number (0-127)
+     * @param {number} [previousNote] - Previous note for context
+     * @param {number} [roundMode] - Round mode for fitting
      * @returns {number} The difference (fitted note - original note)
      */
-    getFitDifference(note) {
-        return this.fitPitch(note) - note;
+    getFitDifference(note, previousNote, roundMode) {
+        const fitted = this.fitPitch(note, previousNote, roundMode);
+        return fitted - note;
+    }
+
+    /**
+     * Gets the scale degree of a note
+     * @param {number} note - MIDI note number (0-127)
+     * @returns {number} The scale degree index (0-based)
+     */
+    getScaleDegree(note) {
+        const chromatic = note % this.steps_per_octave;
+        const intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
+        return this.#scale_intervals.indexOf(intervalFromRoot);
     }
     
     /**
@@ -246,41 +281,125 @@ class Scale {
      * the current scale. If scale mode is disabled, returns the input note unchanged.
      * 
      * @param {number|null} inputNote - MIDI note number (0-127) or null
+     * @param {number} [previousNote] - Previous note for context in smart rounding
+     * @param {number} [roundMode] - Round mode override (0=down, 1=up, 2=nearest, 3=smart)
      * @returns {number} The fitted MIDI note number
      * @example
      * // Fit note 61 (C#) to C major scale
      * const scale = new Scale({scale_mode: 1, root_note: 0, scale_intervals: [0,2,4,5,7,9,11]});
      * const fitted = scale.fitPitch(61); // Returns 60 (C)
      */
-    fitPitch(inputNote) { 
+    fitPitch(inputNote, previousNote, roundMode) { 
         if(inputNote === null) {
             inputNote = 60;
             error(jsarguments[0], this.constructor.name, 'fitPitch: inputNote is null. Using note 60 instead.\n');
         }
+        inputNote = Math.min(Math.max(Math.floor(inputNote), 0), 127);
+        
+        // Use provided round mode or instance default
+        const rm = typeof roundMode !== 'undefined' ? Math.floor(roundMode) : this.#round_mode;
+        
+        // Handle auto-round logic
         if(this.#active_note && this.#auto_round) {   
             this.#round_direction = (inputNote - this.#active_note) === 1;
         }
-        var inputNote = Math.min(Math.max(Math.floor(inputNote), 0), 127);
+        
+        if(this.#scale_mode === 0) {
+            this.#active_note = inputNote;
+            return inputNote;
+        }
     
-        if(this.#scale_mode === 0) return inputNote;
-    
-        var chromatic = inputNote % this.steps_per_octave;
-        var intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
-        var octaveBaseNote = inputNote - intervalFromRoot;
-        var chromaticFit = this.steps_per_octave;
-        for(var i = 0; i < this.#scale_intervals.length; i++) {
-            var interval = this.#scale_intervals[i];
-            if(interval === intervalFromRoot) {
-                chromaticFit = interval;
-                break;
-            } else if (interval > intervalFromRoot) {
-                chromaticFit = this.#round_direction ? interval : this.#scale_intervals[i-1];
-                break;
+        const chromatic = inputNote % this.steps_per_octave;
+        
+        // Check if note is already at root
+        if(chromatic === this.#root_note) {
+            this.#active_note = inputNote;
+            return inputNote;
+        }
+
+        const intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
+        const length = this.#scale_intervals.length;
+
+        for(let i = 1; i < length; i++) {
+            const scale_interval = this.#scale_intervals[i];
+
+            // Check if note is already in scale
+            if(scale_interval == intervalFromRoot) {
+                this.#active_note = inputNote;
+                return inputNote;
+            }
+            
+            // If note isn't in scale, apply rounding logic
+            if(scale_interval > intervalFromRoot) {
+                let fitted_scale_deg, fitted_scale_interval;
+                
+                // Round down
+                if(rm === 'down') {
+                    fitted_scale_deg = i - 1;
+                    fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
+                // Round up
+                } else if(rm == 'up') {
+                    fitted_scale_deg = i;
+                    fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
+                // Round to nearest note
+                } else if(rm == 'nearest') {
+                    const previous_interval = this.#scale_intervals[i - 1];
+                    const prev_distance = Math.abs(previous_interval - intervalFromRoot);
+                    const curr_distance = Math.abs(scale_interval - intervalFromRoot);
+                    fitted_scale_interval = prev_distance <= curr_distance ? previous_interval : scale_interval;
+                    fitted_scale_deg = prev_distance <= curr_distance ? i - 1 : i;
+                // Smart - round up if input is 1 semitone above previous note
+                } else if(rm == 'smart') {
+                    const prevNote = typeof previousNote !== 'undefined' ? previousNote : this.#active_note;
+                    fitted_scale_deg = prevNote != null && (inputNote - prevNote) === 1 ? i : i - 1;
+                    fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
+                } else {
+                    return null;
+                }
+
+                const fit_diff = fitted_scale_interval - intervalFromRoot;
+                const fitted_note = inputNote + fit_diff;
+                this.#active_note = fitted_note;
+                return fitted_note;
             }
         }
-        var fitNote = chromaticFit + octaveBaseNote;
-        this.#active_note = fitNote;
-        return fitNote;
+
+        // Handle case where note is between last and first scale degrees
+        const first = 0;
+        const last = length - 1;
+        let fitted_scale_deg, fitted_scale_interval;
+        
+        // Round down
+        if(rm === 'down') {
+            fitted_scale_deg = last;
+        // Round up
+        } else if(rm === 'up') {
+            fitted_scale_deg = first;
+        // Round to nearest note
+        } else if(rm === 'nearest') {
+            const first_interval = this.#scale_intervals[first] + this.steps_per_octave;
+            const last_interval = this.#scale_intervals[last];
+            const prev_distance = Math.abs(last_interval - intervalFromRoot);
+            const curr_distance = Math.abs(first_interval - intervalFromRoot);
+            fitted_scale_deg = prev_distance <= curr_distance ? last : first;
+        // Smart - round up if input is 1 semitone above previous note
+        } else if(rm === 'smart') {
+            const prevNote = typeof previousNote !== 'undefined' ? previousNote : this.#active_note;
+            fitted_scale_deg = prevNote != null && (inputNote - prevNote) === 1 ? first : last;
+        } else {
+            error('Invalid round mode', this.constructor.name, '\n');
+            return null;
+        }
+
+        fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
+        const fit_diff = fitted_scale_interval - intervalFromRoot;
+        const fitted_note = inputNote + fit_diff;
+        this.#active_note = fitted_note;
+        return fitted_note;
+    }
+
+    fit(note) {
+        return this.fitPitch(note);
     }
     
     /**
@@ -300,27 +419,12 @@ class Scale {
      */
     transpose(note, amt) {
         if(typeof amt === 'undefined') {
-            amt = note;
-            note = this.active_note != null ? this.active_note : 60;
-        } 
-    
-        if(amt === 0) {
-            return note;
+            amt = 0;
         }
-        //if the note isn't in the scale, fit it to the scale and adjust the transposition amount
-        var fitDiff = this.getFitDifference(note);
-        if(fitDiff != 0) {
-            if(amt > 0) {
-                fitDiff = Math.max(0, fitDiff);
-            } else if (amt < 0) {
-                fitDiff = Math.min(0, fitDiff);
-            }
-            note = this.fitPitch(note);
-            amt -= fitDiff;
-        }
+
         //if scale_mode, then transpose by scale degree, else transpose by semitones
         if(this.#scale_mode) {
-            return this.transposeDegrees(note, amt)
+            return this.transposeDegrees(note, amt);
         } else {
             return this.transposeSemitones(note, amt)
         }
@@ -334,40 +438,55 @@ class Scale {
      */
     transposeSemitones(note, amt) {
         if(typeof amt === 'undefined') {
-            amt = note;
-            note = this.active_note != null ? this.active_note : 60;
+            amt = 0;
         }
-        this.active_note = note + amt;
-        return this.active_note;
+        this.#active_note = Math.floor(note) + Math.floor(amt);
+        return this.#active_note;
     }
     
     /**
      * Transposes a note by scale degrees (diatonic transposition)
      * @param {number} [note] - MIDI note number (0-127). If not provided, uses active_note or 60
      * @param {number} [amt] - Number of scale degrees to transpose. If not provided, uses note as amount
+     * @param {number} [previousNote] - Previous note for context in fitting
+     * @param {number} [roundMode] - Round mode for fitting
      * @returns {number} The transposed MIDI note number
      * @example
      * // Transpose C (60) up 2 degrees in C major scale
      * const scale = new Scale({scale_mode: 1, root_note: 0, scale_intervals: [0,2,4,5,7,9,11]});
      * const transposed = scale.transposeDegrees(60, 2); // Returns 64 (E)
      */
-    transposeDegrees(note, amt) {
+    transposeDegrees(note, amt, previousNote, roundMode) {
         if(typeof amt === 'undefined') {
-            amt = note;
-            note = this.active_note != null ? this.active_note : 60;
+            amt = 0;
         }
-        amt = Math.floor(amt);
-        var inputNote = this.fitPitch(note);
-        var xposeInterval = inputNote - note;
-        var chromatic = inputNote % this.steps_per_octave;
-        var intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
-        var octaveBaseNote = inputNote - intervalFromRoot;
-        var inputNoteScaleIx = this.#scale_intervals.indexOf(intervalFromRoot);
-        var xposeScaleDegree = Scale.wrap(Math.round(amt + inputNoteScaleIx), 0, this.length);
-        var xposeOctaves = Math.floor((amt + inputNoteScaleIx) / this.length)
-        xposeInterval += this.#scale_intervals[xposeScaleDegree] + xposeOctaves * this.steps_per_octave;
-        this.active_note = xposeInterval + octaveBaseNote;
-        return this.active_note;
+        
+        // First fit the input note to the scale
+        const ftd = this.fitPitch(note, previousNote, roundMode);
+        const fitted_deg = this.getScaleDegree(ftd);
+        
+        // Convert amt to integer and clamp to prevent out-of-bounds transposition
+        const amt_ = Math.max(0 - ftd, Math.min(127 - ftd, Math.floor(amt)));
+        
+        // If the amount is 0, return the fitted note
+        if(amt_ === 0) {
+            return ftd;
+        }
+        const scale_length = this.#scale_intervals.length;
+    
+        // Calculate the interval for transposition
+        const xpose_deg = Scale.wrap(fitted_deg + amt_, 0, scale_length);
+        
+        const fitted_step = this.#scale_intervals[fitted_deg];
+        const xpose_step = this.#scale_intervals[xpose_deg];
+        const relative_step = xpose_step - fitted_step;
+        const xpose_octaves = Math.floor((fitted_deg + amt_) / scale_length);
+        const xpose_amt = relative_step + (xpose_octaves * this.steps_per_octave);
+        const xposed = ftd + xpose_amt;
+        
+        
+        this.#active_note = xposed;
+        return xposed;
     }
     
     /**
@@ -387,18 +506,19 @@ class Scale {
                 end: start
             }
         } else {
-            var inverted = false;
+            let inverted = false;
             if(start > end) {
-                var temp = start;
+                const temp = start;
                 start = end;
                 end = temp;
                 inverted = true;
             }
-            start = this.fitPitch(start);
-            end = this.fitPitch(end);
-            for(var i = end - start; i >= 0; i--) {
-                if(this.transposeDegrees(start, i) === end) {
-                    var d = inverted ? -i : i;
+        start = this.fitPitch(start);
+        end = this.fitPitch(end);
+            for(let i = end - start; i >= 0; i--) {
+                const transposed = this.transposeDegrees(start, i);
+                if(transposed === end) {
+                    const d = inverted ? -i : i;
                     return {
                         distance: d,
                         start: start,
@@ -417,15 +537,24 @@ class Scale {
      * const scale = new Scale({scale_mode: 1, root_note: 0, scale_intervals: [0,2,4,5,7,9,11]});
      * const validNotes = scale.getAllValidNotes(); // Returns [0,2,4,5,7,9,11,12,14,16,17,19,21,23,...]
      */
-    #getAllValidNotes() {
-        var notes = [];
-        for(var i = 0; i < 128; i++) {
+    getAllValidNotes() {
+        let notes = [];
+        for(let i = 0; i < 128; i++) {
             const fitted = this.fitPitch(i);
             if(fitted === i) {
                 notes.push(i);
             }
         }
         return notes;
+    }
+
+    /**
+     * @deprecated Use isInScale() instead
+     * @param {number} note - MIDI note number
+     * @returns {boolean} True if the note is in scale
+     */
+    isInTune(note) {
+        return this.isInScale(note);
     }
 
     /**
@@ -439,7 +568,7 @@ class Scale {
      * Scale.wrap(-1, 0, 12); // Returns 11
      */
     static wrap(value, min, max) {
-        var range = max - min;
+        const range = max - min;
         return (((value - min) % range) + range) % range + min;
     }
 }
