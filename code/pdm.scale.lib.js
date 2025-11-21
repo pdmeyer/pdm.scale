@@ -35,7 +35,7 @@ class Scale {
     /** @private */
     #valid_notes = [];
     /** @private */
-    #scale_mode = true;
+    #scale_mode = 1;
     /** @private */
     #scale_intervals = [0, 2, 4, 5, 7, 9, 11];
     /** @private */
@@ -270,8 +270,8 @@ class Scale {
      */
     getScaleDegree(note) {
         const chromatic = note % this.steps_per_octave;
-        const intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
-        return this.#scale_intervals.indexOf(intervalFromRoot);
+        const interval_from_root = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
+        return this.#scale_intervals.indexOf(interval_from_root);
     }
     
     /**
@@ -317,20 +317,19 @@ class Scale {
             return inputNote;
         }
 
-        const intervalFromRoot = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
+        const interval_from_root = Scale.wrap(chromatic - this.#root_note, 0, this.steps_per_octave);
         const length = this.#scale_intervals.length;
 
         for(let i = 1; i < length; i++) {
             const scale_interval = this.#scale_intervals[i];
 
             // Check if note is already in scale
-            if(scale_interval == intervalFromRoot) {
+            if(scale_interval == interval_from_root) {
                 this.#active_note = inputNote;
                 return inputNote;
             }
-            
             // If note isn't in scale, apply rounding logic
-            if(scale_interval > intervalFromRoot) {
+            if(scale_interval > interval_from_root) {
                 let fitted_scale_deg, fitted_scale_interval;
                 
                 // Round down
@@ -338,26 +337,27 @@ class Scale {
                     fitted_scale_deg = i - 1;
                     fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
                 // Round up
-                } else if(rm == 'up') {
+                } else if(rm === 'up') {
                     fitted_scale_deg = i;
                     fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
                 // Round to nearest note
-                } else if(rm == 'nearest') {
+                } else if(rm === 'nearest') {
                     const previous_interval = this.#scale_intervals[i - 1];
-                    const prev_distance = Math.abs(previous_interval - intervalFromRoot);
-                    const curr_distance = Math.abs(scale_interval - intervalFromRoot);
+                    const prev_distance = Math.abs(previous_interval - interval_from_root);
+                    const curr_distance = Math.abs(scale_interval - interval_from_root);
                     fitted_scale_interval = prev_distance <= curr_distance ? previous_interval : scale_interval;
                     fitted_scale_deg = prev_distance <= curr_distance ? i - 1 : i;
                 // Smart - round up if input is 1 semitone above previous note
-                } else if(rm == 'smart') {
+                } else if(rm === 'smart') {
                     const prevNote = typeof previousNote !== 'undefined' ? previousNote : this.#active_note;
                     fitted_scale_deg = prevNote != null && (inputNote - prevNote) === 1 ? i : i - 1;
                     fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
+                    
                 } else {
                     return null;
                 }
-
-                const fit_diff = fitted_scale_interval - intervalFromRoot;
+                
+                const fit_diff = fitted_scale_interval - interval_from_root;
                 const fitted_note = inputNote + fit_diff;
                 this.#active_note = fitted_note;
                 return fitted_note;
@@ -368,6 +368,7 @@ class Scale {
         const first = 0;
         const last = length - 1;
         let fitted_scale_deg, fitted_scale_interval;
+        let fit_diff = 0;
         
         // Round down
         if(rm === 'down') {
@@ -379,20 +380,21 @@ class Scale {
         } else if(rm === 'nearest') {
             const first_interval = this.#scale_intervals[first] + this.steps_per_octave;
             const last_interval = this.#scale_intervals[last];
-            const prev_distance = Math.abs(last_interval - intervalFromRoot);
-            const curr_distance = Math.abs(first_interval - intervalFromRoot);
+            const prev_distance = Math.abs(last_interval - interval_from_root);
+            const curr_distance = Math.abs(first_interval - interval_from_root);
             fitted_scale_deg = prev_distance <= curr_distance ? last : first;
         // Smart - round up if input is 1 semitone above previous note
         } else if(rm === 'smart') {
             const prevNote = typeof previousNote !== 'undefined' ? previousNote : this.#active_note;
             fitted_scale_deg = prevNote != null && (inputNote - prevNote) === 1 ? first : last;
+            if(fitted_scale_deg === first) fit_diff = this.#steps_per_octave;
         } else {
             error('Invalid round mode', this.constructor.name, '\n');
             return null;
         }
 
         fitted_scale_interval = this.#scale_intervals[fitted_scale_deg];
-        const fit_diff = fitted_scale_interval - intervalFromRoot;
+        fit_diff += fitted_scale_interval - interval_from_root;
         const fitted_note = inputNote + fit_diff;
         this.#active_note = fitted_note;
         return fitted_note;
@@ -423,7 +425,7 @@ class Scale {
         }
 
         //if scale_mode, then transpose by scale degree, else transpose by semitones
-        if(this.#scale_mode) {
+        if(this.#scale_mode == 1) {
             return this.transposeDegrees(note, amt);
         } else {
             return this.transposeSemitones(note, amt)
@@ -572,7 +574,4 @@ class Scale {
     }
 }
 
-
-if(typeof exports != 'undefined') {
-    exports.Scale = Scale;
-}
+exports.Scale = Scale;
